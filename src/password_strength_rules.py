@@ -1,13 +1,16 @@
+import string
+import collections
+
 def password_rules(password):
     # format for strengths and weaknesses. the default value is False.
-    weaknesses = [['All letters:', 'False'], #0
-                  ['All digits','False'], #1
-                  ['Repeated characters:', 'False'], #2
-                  ['Consecutive uppercase letters','False'], #3
-                  ['Consecutive lowercase letters:', 'False'], #4
-                  ['Consecutive digits','False'], #5
-                  ['Sequential letters:', 'False'], #6
-                  ['Sequential digits','False']] #7
+    weaknesses = [['All letters:', 'True'], #0
+                  ['All digits','True'], #1
+                  ['Repeated characters:', 'True'], #2
+                  ['Consecutive uppercase letters','True'], #3
+                  ['Consecutive lowercase letters:', 'True'], #4
+                  ['Consecutive digits','True'], #5
+                  ['Sequential letters:', 'True'], #6
+                  ['Sequential digits','True']] #7
 
     strengths = [['Length:', "False"], #0
                  ['Upper case letters',"False"], #1
@@ -52,8 +55,8 @@ def password_rules(password):
         popup_msg="Password contains no digits\nPlease check the analysis for correction"
         mandatory_violation = True
 
-    if any(x.isalnum()for x in password):
-        num_of_signs = [x for x in password if x.isalnum()]
+    if any(x in string.punctuation for x in password):
+        num_of_signs = [x for x in password if x in string.punctuation]
         score += (len(num_of_signs)*6)
         strengths[4][1] = 'True'
     else:
@@ -69,6 +72,39 @@ def password_rules(password):
             strengths[5][1] = 'True'
 
     # TODO penalties reduction
+    # checking if string is all letters
+    if (password.isalpha()):
+        score -= (len(password)/4)
+    else:
+        weaknesses[0][1] = False
+
+    # checking if string is all digits
+    if(password.isdigit()):
+        score -= (len(password)/4)
+    else:
+        weaknesses[1][1] = False
+
+    # checking for repeated characters
+    d = collections.defaultdict(int)
+    e = 0
+    for c in password:
+        d[c] += 1 
+    for c in sorted(d, key=d.get, reverse=True):
+        if (d[c] > 1):
+            e +=d[c]
+    if e > 0:
+        e /= 2
+        score -= e*(e-1)
+    else:
+        weaknesses[2][1] = False
+
+    # checking if there are consecutive uppercase characters
+    l = len(password)
+    s = ''.join(sorted(password))
+
+    for i in range(1,l):
+        if ord(s[i]) is not ord(s[i-1]):
+            print("false")
 
     # set the score
     if score < 20:
