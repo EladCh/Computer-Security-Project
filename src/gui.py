@@ -28,8 +28,7 @@ col2 = Column([
 col3 = Column([
     [Frame('Password Check:', 
             [[Text('Insert password to check'), InputText(key='-PASSWORD-TO-CHECK-',size=(15, 1))],
-            [Text('In Dictionary 1: {}'.format('NO')), Text('In Dictionary 2: {}'.format('NO'))],
-            [Button('Test check of previously known dictionary', enable_events= True)]],)]
+            [Button('        Check the presence of the password      ', enable_events= True)]],)]
 ])
 
 col4 = Column([
@@ -153,7 +152,27 @@ while True:
             pass
     elif event == 'Test check of previously known dictionary':
         try:
-            test_bloom_filter(int(values['-K-']),float(values['-N-']))
+            # check if the given password is already in the dictionary, and which one if it does
+            in_dict = 0
+            if bloomf_1.check(values['-PASSWORD-TO-CHECK-']):
+                in_dict = 1
+            if bloomf_2.check(values['-PASSWORD-TO-CHECK-']):
+                # check for multiple instances (shouldnt happen)
+                if in_dict > 0:
+                    in_dict = 3
+                else:
+                    in_dict = 2
+            
+            if in_dict > 0 and in_dict < 3:
+                popup_txt = 'The password is in dictionary ' + str(in_dict)
+                sg.PopupOK(popup_txt)
+            elif in_dict == 3:
+                sg.PopupOK('The password is in both dictionaries 1 & 2')
+            else:
+                sg.PopupError('The password is not present in any dictionary')
+            
+            # TODO decide what to do with the test of the previously known dictionary (the comented line below)
+            #test_bloom_filter(int(values['-K-']),float(values['-N-']))
         except: # invalid data or mistake
             pass
 
