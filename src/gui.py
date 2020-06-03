@@ -65,7 +65,13 @@ while True:
     elif event == 'Insert new password':
         try:
             # first make sure that the password doesnt apear in the password_corpus
-            if values['-NEW-PASSWORD-'] not in password_corpus:
+            if values['-NEW-PASSWORD-'] in password_corpus:
+                sg.PopupError("Please enter non trivial password\nFor guidness check out the analysis")
+            # check that this password is a new one and not already in one of the filters
+            elif bloomf_1.check(values['-NEW-PASSWORD-']) or bloomf_2.check(values['-NEW-PASSWORD-']):
+                sg.PopupError("This password is already in the filter\nPlease try another password")
+            # new filter- insert
+            else:
                 _a, _b, _c, popup_msg, ruls_violation = password_rules(values['-NEW-PASSWORD-'])
                 if ruls_violation == True:
                     sg.PopupError(popup_msg)
@@ -85,8 +91,7 @@ while True:
                             bloomf_1.add(values['-NEW-PASSWORD-'])
                         else:
                             bloomf_2.add(values['-NEW-PASSWORD-'])
-            else:
-                sg.PopupError("Plese enter non trivial password\nFor guidness check out the analysis")
+                sg.PopupOK("The password has been inserted successfully")
         except: # invalid data or mistake
             pass
     elif event == 'Show complete password strength analysis':
