@@ -20,9 +20,8 @@ col1 = Column([
 
 col2 = Column([
     [Frame('Bloom Filter:',
-            [[Text('K'), sg.InputText(key='-K-', size=(5, 1)), Text('N'), InputText(key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
-            [Text('Current filter params: K={} N={}'.format(5,7))],
-            [Text('Insert Counter: {}'.format(0)), Text('Marked Bits Counter: {}'.format(0))]],)]
+            [[Text('K'), sg.InputText('10', key='-K-', size=(5, 1)), Text('N'), InputText('0.01', key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
+            [Button('           Show filter statistics           ', enable_events= True)],],)]
 ])
 
 col3 = Column([
@@ -174,6 +173,14 @@ while True:
             # TODO decide what to do with the test of the previously known dictionary (the comented line below)
             #test_bloom_filter(int(values['-K-']),float(values['-N-']))
         except: # invalid data or mistake
+            pass
+    elif event == 'Show filter statistics':
+        try:
+            insert_count = bloomf_1.get_element_count() + bloomf_2.get_element_count()
+            marked_bits_dict1 = bloomf_1.get_marked_bits_count()
+            marked_bits_dict2 = bloomf_2.get_marked_bits_count()
+            sg.PopupOK('Insert Counter: {}\n\nMarked Bits Counter in dict 1: {}\nMarked Bits Counter in dict 2: {}'.format(insert_count,marked_bits_dict1, marked_bits_dict2))
+        except:
             pass
 
 main_window.close()
