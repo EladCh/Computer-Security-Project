@@ -41,7 +41,9 @@ class BloomFilter(object):
         # maximum items in the filter (from input)
         self.max_num_of_items = items_count
         
-  
+    def get_marked_bits_count(self):
+        return self.bit_array.count("1")
+
     def add(self, item): 
         ''' 
         Add an item in the filter 
