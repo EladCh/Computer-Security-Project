@@ -31,7 +31,7 @@ col3 = Column([
 ])
 
 col4 = Column([
-    [Frame('Filter Visualization', [[Text('Full visual of the actual filter')]],)]
+    [Frame('Filter Visualization', [[Button('    Show full visual of the filter    ', enable_events= True)]],)]
 ])
 
 layout = [main_title_col,[col1, col2], [col3, col4]]
@@ -149,7 +149,7 @@ while True:
             pass
         except: # invalid data or mistake
             pass
-    elif event == 'Test check of previously known dictionary':
+    elif event == '        Check the presence of the password      ':
         try:
             # check if the given password is already in the dictionary, and which one if it does
             in_dict = 0
@@ -174,7 +174,7 @@ while True:
             #test_bloom_filter(int(values['-K-']),float(values['-N-']))
         except: # invalid data or mistake
             pass
-    elif event == 'Show filter statistics':
+    elif event == '           Show filter statistics           ':
         try:
             insert_count = bloomf_1.get_element_count() + bloomf_2.get_element_count()
             marked_bits_dict1 = bloomf_1.get_marked_bits_count()
@@ -182,5 +182,58 @@ while True:
             sg.PopupOK('Insert Counter: {}\n\nMarked Bits Counter in dict 1: {}\nMarked Bits Counter in dict 2: {}'.format(insert_count,marked_bits_dict1, marked_bits_dict2))
         except:
             pass
+    elif event == '    Show full visual of the filter    ':
+        try: 
+
+            filter_visual_title_col = [sg.Text('Full visualization of the filters', size=(30, 1), font=("Helvetica", 25))]               
+
+            dict1_bits = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
+            dict2_bits = str(bloomf_2.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
+            dict1_hexa = bytearray(bloomf_1.get_bit_array()).hex()
+            dict2_hexa = bytearray(bloomf_2.get_bit_array()).hex()
+
+            dict_bin_col = Column([
+                [Frame('Bloom Filter 1: Binary',
+                        [
+                        [sg.Text(dict1_bits, size=(64,32))]
+                        ],
+                )],
+                [Frame('Bloom Filter 2: Binary',
+                        [
+                        [sg.Text(dict2_bits, size=(64,32))]
+                        ],
+                )]
+            ])
+
+            dict_hexa_col = Column([
+                [Frame('Bloom Filter 1: Hexadecimal',
+                        [
+                        [sg.Text(dict1_hexa, size=(64,32))]
+                        ],
+                )],
+                [Frame('Bloom Filter 2: Hexadecimal',
+                        [
+                        [sg.Text(dict2_hexa, size=(64,32))]
+                        ],
+                )]
+            ])
+
+            curr_ok_col = [Button('Ok', enable_events= True)] 
+
+            filter_visual_layout = [filter_visual_title_col,[dict_bin_col ,dict_hexa_col], curr_ok_col]
+            
+            filter_visual_window = Window('Full filter visual', filter_visual_layout)
+
+            while True:             
+                ana_event, ana_values = filter_visual_window.read()
+                if ana_event == sg.WIN_CLOSED or ana_event == 'Ok':
+                    break
+            filter_visual_window.close()
+            pass
+        except:
+            pass
+
 
 main_window.close()
+
+c = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
