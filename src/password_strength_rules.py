@@ -1,5 +1,9 @@
-import string
+import string 
 import collections
+
+mandatory_violation = False
+
+##TODO: concatenate all the strings
 
 def password_rules(password):
     # format for strengths and weaknesses. the default value is False.
@@ -63,97 +67,6 @@ def password_rules(password):
         popup_msg="Password contains no special characters\nPlease check the analysis for correction"
         mandatory_violation = True
 
-###penalties added by me
-## checking if string is all letters
-    if (password.isalpha()):
-        score -= (len(password)/4)
-
-## checking if string is all digits
-    if(password.isdigit()):
-        score -= (len(password)/4)
-
-### checking for repeated characters
-    d = collections.defaultdict(int)
-    e=0
-    for (x in password):
-        d[c] += 1
-    for(x in sorted(d, key=d.get, reverse=True)):
-        if (d[c] > 1):
-            e += d[c]
-##To see the output
-    print(e)
-    score += e*(e-1)
-
-### checking if there are consecutive uppercase characters
-    countUpper=0
-    l=len(password)
-    s = ''.join(sorted(password))
-
-    for(i in range(1,l)):
-        if(ord(s[i])) = ord(s[i-1] !=1) and x.isupper()for x in s[i] :
-            countUpper += 1
-
-    score += countUpper*2
-
-### checking if there are consecutive lowercase characters
-    countLower=0
-    for(i in range(1,l)):
-        if(ord(s[i])) = ord(s[i-1] !=1) and x.islower()for x in s[i]:
-            countLower += 1
-
-    score += countLower*2
-
-
-##cheking if there are sequential letters
-
-    sequentialLettersCount = 0
-
-    char_dict = {}
-    prev_char=None
-    flag=0
-
-    for char in list(password):
-        if char not in char_dict and char.isalpha():
-            char_dict[char] = 0
-
-    if char == prev_char and flag !=0:
-        char_dict[char]+=1
-        flag = 0
-        sequentialLettersCount+=1
-    else:
-        flag=1
-    prev_char = char
-
-    score += sequentialLettersCount
-
-
-##cheking if there are sequential digits
-
-    sequentialDigitsCount = 0
-
-    char_dict = {}
-    prev_char=None
-    flag=0
-
-    for char in list(password):
-        if char not in char_dict and char.isdigit():
-            char_dict[char] = 0
-
-    if char == prev_char and flag !=0:
-
-        char_dict[char]+=1
-        flag = 0
-        sequentialDigitCount+=1
-    else:
-        flag=1
-    prev_char = char
-
-    score += sequentialDigitCount
-
-
-###Added by me untill here
-
-##from before
     if len(password)>2:
         s = password[1:-1]
         if any(x.isalnum()for x in s) or any(x.isdigit()for x in s):
@@ -162,6 +75,96 @@ def password_rules(password):
             score += (len(num_of_signs)*2)
             strengths[5][1] = 'True'
 
+
+###penalties added by me
+## checking if string is all letters
+    if (password.isalpha()):
+        score -= (len(password)/4)
+        popup_msg="string is all letters, penalty induced"
+        mandatory_violation=True
+
+## checking if string is all digits
+    if(password.isdigit()):
+        score -= (len(password)/4)
+        popup_msg="string is all digits, penalty induced"
+        mandatory_violation=True
+
+### checking for repeated characters
+    results=0
+    results = collections.Counter(password)
+    for i in results: 
+        if results[i]>1:
+            score -= results[i]*(results[i]-1)
+            popup_msg="There are repeated characters, penalty induced"
+            mandatory_violation=True
+
+### checking if there are consecutive uppercase characters
+    countUpper=0
+    l=len(password)
+
+    for i in range(1,l-1):
+        if (password[i] == password[i+1] and password[i].isupper()):
+            countUpper += 1
+        else:
+            countUpper=1
+
+        if countUpper>1:
+            score -= countUpper*2
+            popup_msg="There are consecutive uppercase letters, penalty induced"
+            mandatory_violation=True
+
+### checking if there are consecutive lowercase characters
+    
+    countLower=0
+    for i in range(1,l-1):
+        if(password[i] == password[i-1] and password[i].islower()):
+            countLower += 1
+        else:
+            counterLower=1
+        if countLower>1:
+            score -= countLower*2
+            popup_msg="There are consecutive lowercase letters, penalty induced"
+            mandatory_violation=True
+
+##checking if there are sequential letters
+#TODO:fix this, the function only seems to check if all letters and not if sequential
+    '''
+    sequentialLettersCount=0
+
+    prev_letter = ''
+    current_string=''
+
+    for letter in password:
+        if prev_letter <= letter and letter.isalpha():
+            current_string+=letter
+            sequentialLettersCount+=1
+
+        if sequentialLettersCount>1:
+            score -= sequentialLettersCount
+            popup_msg="There are sequential letters, penalty induced"
+            mandatory_violation=True
+
+    '''
+##checking if there are sequential digits
+###TODO:fix this, the function only seems to check if all digits and not if sequential
+    '''
+    sequentialDigitCount=0
+
+    prev_digit = ''
+    current_string=''
+
+    for digit in password:
+        if prev_digit <= digit and digit.isdigit():
+            current_string+=digit
+            sequentialDigitCount+=1
+
+        if sequentialDigitCount>1:
+            score -= sequentialDigitCount
+            popup_msg="There are sequential digits, penalty induced"
+            mandatory_violation=True
+
+    '''
+###Added by me untill here
 
     # set the score
     if score < 20:
@@ -174,4 +177,5 @@ def password_rules(password):
         score_txt = 'Strong'
     elif score >= 80:
         score_txt = 'Very Strong'
-    return weaknesses, strengths, score_txt, popup_msg, mandatory_violation
+
+    return  weaknesses, strengths, score_txt, popup_msg, mandatory_violation
