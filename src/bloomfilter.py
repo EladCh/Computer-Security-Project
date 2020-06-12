@@ -44,6 +44,9 @@ class BloomFilter(object):
     def get_marked_bits_count(self):
         return self.bit_array.count("1")
 
+    def get_bit_array(self):
+        return self.bit_array
+
     def add(self, item): 
         ''' 
         Add an item in the filter 
