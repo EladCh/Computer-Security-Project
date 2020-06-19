@@ -7,6 +7,8 @@ python version 3.6 (or newer)
 $ sudo apt-get update
 $ sudo apt-get install python3.6
 $ command -v pip3
+$ pip3 install mmh3
+$ pip3 install bitarray
 ```
 PySimpleGUI
 ```
