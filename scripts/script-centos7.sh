@@ -8,7 +8,7 @@ sudo pip3 install mmh3
 sudo pip3 install bitarray
 
 #pysimplegui
-sudo pip3 install PySimpleGUI
+sudo pip3 install pysimplegui
 
 #running the program
 sudo python3 -m gui
