@@ -10,6 +10,7 @@ from password_strength_rules import password_rules
 
 sg.theme('LightGray1')   # Add a little color to your windows
 
+# create the main window parts
 main_title_col = [sg.Text('     Bloom Filter & Password Strength Checker' , size=(40, 1), font=("Helvetica", 20))]
 
 col1 = Column([
@@ -20,7 +21,7 @@ col1 = Column([
 
 col2 = Column([
     [Frame('Bloom Filter:',
-            [[Text('K'), sg.InputText('10', key='-K-', size=(5, 1)), Text('N'), InputText('0.01', key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
+            [[Text('# Bits'), sg.InputText('10', key='-K-', size=(5, 1)), Text('# Hashs'), InputText('0.01', key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
             [Button('           Show filter statistics           ', enable_events= True)],],)]
 ])
 
@@ -43,8 +44,11 @@ main_window = Window('Double Bloom Filter & Password Strength Checker', layout)
 # read it once in the begining and than use it to prevent those passwords
 password_corpus = [line.strip() for line in open("files/10-million-password-list-top-1000000.txt", 'r')]
 
+# init redundency variables
+redundency_count = 0
+redundency_map = dict()
+
 # set default values of the bfilters.
-# TODO remove default and raise a popup if an action is done before the settings
 bloomf_1 = BloomFilter(10,0.01)
 bloomf_2 = BloomFilter(10,0.01)
 
@@ -60,35 +64,43 @@ while True:
         max_fp_rate = float(values['-N-'])
         bloomf_1 = BloomFilter(max_num_of_items,max_fp_rate)
         bloomf_2 = BloomFilter(max_num_of_items,max_fp_rate)
+        confirm = sg.PopupOKCancel("Are you sure you want to change filter parameters?\nThis operation resets the filters and dictionaries", title='Confirm')
+        if confirm is 'OK':
+            # reset redundency variables
+            redundency_count = 0
+            redundency_map = dict()
     elif event == 'Insert new password':
         try:
             # first make sure that the password doesnt apear in the password_corpus
             if values['-NEW-PASSWORD-'] in password_corpus:
                 sg.PopupError("Please enter non trivial password\nFor guidness check out the analysis")
-            # check that this password is a new one and not already in one of the filters
-            elif bloomf_1.check(values['-NEW-PASSWORD-']) or bloomf_2.check(values['-NEW-PASSWORD-']):
-                sg.PopupError("This password is already in the filter\nPlease try another password")
             # new filter- insert
             else:
+                # check that the password stands in standards
                 _a, _b, _c, popup_msg, ruls_violation = password_rules(values['-NEW-PASSWORD-'])
                 if ruls_violation == True:
                     sg.PopupError(popup_msg)
                     continue
-                # check that the password is new and not in one of the filters
-                if (not bloomf_1.check(values['-NEW-PASSWORD-']) and not bloomf_2.check(values['-NEW-PASSWORD-'])):
-                    # check if insertion to bfilt 1 is allowed
-                    if bloomf_1.is_add_allowed():
-                        bloomf_1.add(values['-NEW-PASSWORD-'])
-                    # else check if insertion to bfilt 2 is allowed
-                    elif bloomf_2.is_add_allowed():
-                        bloomf_2.add(values['-NEW-PASSWORD-'])
-                    # this is a new password and the two bfilters are full- add the password to the filter with the minimum
-                    # element number. if they are equal enter to bfilter 1
+                # check if this password is a redundent one and document it (we allow redundecies)
+                if bloomf_1.check(values['-NEW-PASSWORD-']) or bloomf_2.check(values['-NEW-PASSWORD-']):
+                    redundency_count += 1
+                    if values['-NEW-PASSWORD-'] in redundency_map.keys():
+                        redundency_map[values['-NEW-PASSWORD-']] += 1
                     else:
-                        if bloomf_1.get_element_count() <= bloomf_2.get_element_count():
-                            bloomf_1.add(values['-NEW-PASSWORD-'])
-                        else:
-                            bloomf_2.add(values['-NEW-PASSWORD-'])
+                        redundency_map[values['-NEW-PASSWORD-']] = 1
+                # check if insertion to bfilt 1 is allowed
+                if bloomf_1.is_add_allowed():
+                    bloomf_1.add(values['-NEW-PASSWORD-'])
+                # else check if insertion to bfilt 2 is allowed
+                elif bloomf_2.is_add_allowed():
+                    bloomf_2.add(values['-NEW-PASSWORD-'])
+                # this is a new password and the two bfilters are full- add the password to the filter with the minimum
+                # element number. if they are equal enter to bfilter 1
+                else:
+                    if bloomf_1.get_element_count() <= bloomf_2.get_element_count():
+                        bloomf_1.add(values['-NEW-PASSWORD-'])
+                    else:
+                        bloomf_2.add(values['-NEW-PASSWORD-'])
                 sg.PopupOK("The password has been inserted successfully")
         except: # invalid data or mistake
             pass
@@ -179,7 +191,7 @@ while True:
             insert_count = bloomf_1.get_element_count() + bloomf_2.get_element_count()
             marked_bits_dict1 = bloomf_1.get_marked_bits_count()
             marked_bits_dict2 = bloomf_2.get_marked_bits_count()
-            sg.PopupOK('Insert Counter: {}\n\nMarked Bits Counter in dict 1: {}\nMarked Bits Counter in dict 2: {}'.format(insert_count,marked_bits_dict1, marked_bits_dict2))
+            sg.PopupOK('Insert Counter: {}\n\nMarked Bits Counter in dict 1: {}\nMarked Bits Counter in dict 2: {}\n\nRedundent Passwords in both dictionaries: {}'.format(insert_count,marked_bits_dict1, marked_bits_dict2, redundency_count))
         except:
             pass
     elif event == '    Show full visual of the filter    ':
