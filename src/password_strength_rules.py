@@ -61,7 +61,7 @@ def password_rules(password):
         mandatory_violation = True
 
 
-###changed to check for special character
+    #changed to check for special character
     if any(x in string.punctuation for x in password):
         num_of_signs = [x for x in password if x in string.punctuation]
         score += (len(num_of_signs)*6)
@@ -79,14 +79,14 @@ def password_rules(password):
             strengths[5][1] = 'True'
 
 
-## checking if string is all letters
+    # checking if string is all letters
     if (password.isalpha()):
         score -= (len(password)/4)
         popup_msg+="Password is all letters.\n"
         mandatory_violation=True
         weaknesses[1][1]='True'
 
-## checking if string is all digits
+    # checking if string is all digits
     if(password.isdigit()):
         score -= (len(password)/4)
         popup_msg+="Password is all digits.\n"
@@ -94,7 +94,7 @@ def password_rules(password):
         weaknesses[2][1]='True'
 
 
-### checking for repeated characters
+    # checking for repeated characters
     results=0
     results = collections.Counter(password)
     for i in results:
@@ -104,7 +104,7 @@ def password_rules(password):
             mandatory_violation=True
             weaknesses[3][1]='True'
 
-### checking if there are consecutive uppercase characters
+    # checking if there are consecutive uppercase characters
     countUpper=0
     l=len(password)
 
@@ -120,7 +120,7 @@ def password_rules(password):
             mandatory_violation=True
             weaknesses[4][1]='True'
 
-### checking if there are consecutive lowercase characters
+    # checking if there are consecutive lowercase characters
     countLower=0
     for i in range(1,l-1):
         if(password[i] == password[i-1] and password[i].islower()):
@@ -133,7 +133,7 @@ def password_rules(password):
             mandatory_violation=True
             weaknesses[5][1]='True'
 
-    ##checking if there are sequential letters
+    # checking if there are sequential letters
     sequentialLettersCountUp=0
     sequentialLettersCountDown=0
 
@@ -150,7 +150,7 @@ def password_rules(password):
         mandatory_violation=True
         weaknesses[6][1]='True'
 
-##checking if there are sequential digits
+    # checking if there are sequential digits
     sequentialDigitsCountUp=0
     sequentialDigitsCountDown=0
 
@@ -179,8 +179,5 @@ def password_rules(password):
         score_txt = 'Strong'
     elif score >= 80:
         score_txt = 'Very Strong'
-
-    print(weaknesses)
-    print(strengths)
 
     return  weaknesses, strengths, score_txt, popup_msg, mandatory_violation
