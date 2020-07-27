@@ -68,32 +68,22 @@ class BloomFilter(object):
   
     def check_values(self, item): 
         ''' 
-        Check for existence of an item in filter 
+        Check for existence of an item in filter according to self.values
         '''
-        '''for i in range(self.hash_count): 
-            digest = mmh3.hash(item,i) % self.size 
-            if self.bit_array[digest] == False: 
-  
-                # if any of bit is False then,its not present 
-                # in filter 
-                # else there is probability that it exist 
-                return False
-        '''
+        
         if item in self.values:
             return True
         return False
 
     def check(self,item):
+        '''     
+        Check for existence of an item in filter according to the bitarray
+        '''
         for i in range(self.hash_count): 
             digest = mmh3.hash(item,i) % self.size 
             if self.bit_array[digest] == False: 
-  
-                # if any of bit is False then,its not present 
-                # in filter 
-                # else there is probability that it exist 
                 return False
         return True
-
 
     def get_element_count(self):
         '''
