@@ -79,7 +79,7 @@ while True:
             # first make sure that the password doesnt apear in the password_corpus
             if english_dictionary.check(values['-NEW-PASSWORD-']) == True:
                 sg.PopupError("The password exists in the English standard dictionary, pick another") 
-            if values['-NEW-PASSWORD-'] in password_corpus:
+            elif values['-NEW-PASSWORD-'] in password_corpus:
                 sg.PopupError("Please enter a non trivial password\nFor guidness check out the analysis")
             # new filter- insert
             else:
@@ -189,8 +189,6 @@ while True:
             else:
                 sg.PopupError('The password is not present in any dictionary')
             
-            # TODO decide what to do with the test of the previously known dictionary (the comented line below)
-            #test_bloom_filter(int(values['-K-']),float(values['-N-']))
         except: # invalid data or mistake
             pass
     elif event == '           Show filter statistics           ':
@@ -202,8 +200,6 @@ while True:
         except:
             pass
     elif event == '    Show full visual of the filter    ':
-        #dict1_hex = bytearray(bloomf_1.size).hex()
-        #sg.PopupOKCancel(dict1_hex)
         try: 
 
             bits_num = int(values['-K-'])
@@ -212,13 +208,6 @@ while True:
 
             dict1_bits = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
             dict2_bits = str(bloomf_2.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
-            #dict1_hexa =
-            #dict2_hexa =
-
-            #sg.PopupOKCancel(dict1_hexa)
-
-            #hexa1 = dict1_hexa.decode
-            #hexa2 = dict2_hexa.decode
 
             dict_bin_col_1 = Column([
                 [Frame('Bloom Filter 1: Binary',
@@ -254,5 +243,3 @@ while True:
 
 
 main_window.close()
-
-c = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
