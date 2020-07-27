@@ -13,25 +13,17 @@ class BloomFilter(object):
     Class for Bloom filter, using murmur3 hash function 
     '''
   
-    def __init__(self, size,items_count): 
+    def __init__(self, size,hash_times): 
         ''' 
-        items_count : int 
-            Number of items expected to be stored in bloom filter 
-        fp_prob : float 
-            False Positive probability in decimal 
+        hash_times : int 
+            Number of hashes in bloom filter 
+        size : int 
+            Size of bitarray 
         '''
-        # False posible probability in decimal 
-        #self.fp_prob = fp_prob 
-  
-        # Size of bit array to use 
-        #self.size = self.get_size(size,items_count) 
   
         self.size = size
-
-        # number of hash functions to use 
-        #self.hash_count = self.get_hash_count(self.size,items_count) 
   
-        self.hash_count = items_count
+        self.hash_count = hash_times
 
         # Bit array of given size 
         self.bit_array = bitarray(self.size) 
@@ -43,8 +35,9 @@ class BloomFilter(object):
         self.element_count = 0
 
         # maximum items in the filter (from input)
-        self.max_num_of_items = items_count
+        self.max_num_of_items = hash_times
         
+        # holds the values that were entered the filter
         self.values = list()
 
     def get_marked_bits_count(self):
