@@ -3,6 +3,8 @@ from PySimpleGUI import InputCombo, Combo, Multiline, ML, MLine, Checkbox, CB, C
 from bloom_test import test_bloom_filter
 from bloomfilter import BloomFilter
 from password_strength_rules import password_rules
+import binascii
+import enchant
 # All the stuff inside your window. This is the PSG magic code compactor...
 # https://pysimplegui.readthedocs.io/en/latest/#layouts
 # https://opensource.com/article/18/8/pysimplegui
@@ -21,7 +23,7 @@ col1 = Column([
 
 col2 = Column([
     [Frame('Bloom Filter:',
-            [[Text('# Bits'), sg.InputText('10', key='-K-', size=(5, 1)), Text('# Hashs'), InputText('0.01', key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
+            [[Text('# Bits'), sg.InputText('8', key='-K-', size=(5, 1)), Text('#Hashes'), InputText('1', key='-N-',size=(5, 1)), Button('Enter', enable_events= True)],
             [Button('           Show filter statistics           ', enable_events= True)],],)]
 ])
 
@@ -42,15 +44,22 @@ main_window = Window('Double Bloom Filter & Password Strength Checker', layout)
 
 # 10-million-password-list from https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt
 # read it once in the begining and than use it to prevent those passwords
-password_corpus = [line.strip() for line in open("files/10-million-password-list-top-1000000.txt", 'r')]
+password_corpus = [line.strip() for line in open("10-million-password-list-top-1000000.txt", 'r')]
+
+# loads a built in Python dictionary to reject passwords existing in the dictionary
+english_dictionary = enchant.Dict("en_US")
+
+# init redundency variables
+redundency_count = 0
+redundency_map = dict()
 
 # init redundency variables
 redundency_count = 0
 redundency_map = dict()
 
 # set default values of the bfilters.
-bloomf_1 = BloomFilter(10,0.01)
-bloomf_2 = BloomFilter(10,0.01)
+bloomf_1 = BloomFilter(8,1)
+bloomf_2 = BloomFilter(8,1)
 
 # Event Loop to process "events"
 while True:             
@@ -60,10 +69,10 @@ while True:
         break
     elif event == 'Enter':
         # update the bfilers. note that the action erases the previous filters with all the data (TODO add a pop up saying that)
-        max_num_of_items = int(values['-K-'])
-        max_fp_rate = float(values['-N-'])
-        bloomf_1 = BloomFilter(max_num_of_items,max_fp_rate)
-        bloomf_2 = BloomFilter(max_num_of_items,max_fp_rate)
+        bits_num = int(values['-K-'])
+        hash_num = int(values['-N-'])
+        bloomf_1 = BloomFilter(bits_num,hash_num)
+        bloomf_2 = BloomFilter(bits_num,hash_num)
         confirm = sg.PopupOKCancel("Are you sure you want to change filter parameters?\nThis operation resets the filters and dictionaries", title='Confirm')
         if confirm is 'OK':
             # reset redundency variables
@@ -72,8 +81,10 @@ while True:
     elif event == 'Insert new password':
         try:
             # first make sure that the password doesnt apear in the password_corpus
-            if values['-NEW-PASSWORD-'] in password_corpus:
-                sg.PopupError("Please enter non trivial password\nFor guidness check out the analysis")
+            if english_dictionary.check(values['-NEW-PASSWORD-']) == True:
+                sg.PopupError("The password exists in the English standard dictionary, pick another") 
+            elif values['-NEW-PASSWORD-'] in password_corpus:
+                sg.PopupError("Please enter a non trivial password\nFor guidness check out the analysis")
             # new filter- insert
             else:
                 # check that the password stands in standards
@@ -82,7 +93,7 @@ while True:
                     sg.PopupError(popup_msg)
                     continue
                 # check if this password is a redundent one and document it (we allow redundecies)
-                if bloomf_1.check(values['-NEW-PASSWORD-']) or bloomf_2.check(values['-NEW-PASSWORD-']):
+                if bloomf_1.check_values(values['-NEW-PASSWORD-']) or bloomf_2.check_values(values['-NEW-PASSWORD-']):
                     redundency_count += 1
                     if values['-NEW-PASSWORD-'] in redundency_map.keys():
                         redundency_map[values['-NEW-PASSWORD-']] += 1
@@ -108,19 +119,19 @@ while True:
         try:
             weaknesses, strengths, score, popup_msg, ruls_violation = password_rules(values['-NEW-PASSWORD-'])
 
-            headings = ['property', 'exists']   
+            headings = ['property', 'exists']
 
             subject_pass_to_analysis_col = [sg.Text('                     Password: {}'.format(values['-NEW-PASSWORD-']), size=(30, 1), font=("Helvetica", 25))]               
 
             strength_analysis_col = Column([
                 [Frame('Password Strength Parameters',
                         [
-                        [sg.Table(values=strengths[1:][:], max_col_width=60, headings=headings,
+                        [sg.Table(values=strengths[0:][:], max_col_width=60, headings=headings,
                         # background_color='light blue',
                         auto_size_columns=True,
                         display_row_numbers=True,
                         justification='left',
-                        num_rows=7,
+                        num_rows=8,
                         alternating_row_color='lightyellow',
                         key='-STRENGTH-TABLE-',
                         row_height=35,
@@ -132,12 +143,12 @@ while True:
             weaknesses_analysis_col = Column([
                 [Frame('Password weaknesses Parameters',
                         [
-                        [sg.Table(values=weaknesses[1:][:], max_col_width=60, headings=headings,
+                        [sg.Table(values=weaknesses[0:][:], max_col_width=60, headings=headings,
                         # background_color='light blue',
                         auto_size_columns=True,
                         display_row_numbers=True,
                         justification='left',
-                        num_rows=7,
+                        num_rows=8,
                         alternating_row_color='lightyellow',
                         key='-STRENGTH-TABLE-',
                         row_height=35,
@@ -178,12 +189,10 @@ while True:
                 popup_txt = 'The password is in dictionary ' + str(in_dict)
                 sg.PopupOK(popup_txt)
             elif in_dict == 3:
-                sg.PopupOK('The password is in both dictionaries 1 & 2')
+                sg.PopupOK('Th password is in both dictionaries 1 & 2')
             else:
                 sg.PopupError('The password is not present in any dictionary')
             
-            # TODO decide what to do with the test of the previously known dictionary (the comented line below)
-            #test_bloom_filter(int(values['-K-']),float(values['-N-']))
         except: # invalid data or mistake
             pass
     elif event == '           Show filter statistics           ':
@@ -197,42 +206,33 @@ while True:
     elif event == '    Show full visual of the filter    ':
         try: 
 
-            filter_visual_title_col = [sg.Text('Full visualization of the filters', size=(30, 1), font=("Helvetica", 25))]               
+            bits_num = int(values['-K-'])
+
+            filter_visual_title_col = [sg.Text('Full visualization of the filters', size=(25, 1), font=("Helvetica", 25))]               
 
             dict1_bits = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
             dict2_bits = str(bloomf_2.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")
-            dict1_hexa = bytearray(bloomf_1.get_bit_array()).hex()
-            dict2_hexa = bytearray(bloomf_2.get_bit_array()).hex()
 
-            dict_bin_col = Column([
+            dict_bin_col_1 = Column([
                 [Frame('Bloom Filter 1: Binary',
                         [
-                        [sg.Text(dict1_bits, size=(64,32))]
+                        [sg.Text(dict1_bits, size=(32,15))]
                         ],
                 )],
-                [Frame('Bloom Filter 2: Binary',
-                        [
-                        [sg.Text(dict2_bits, size=(64,32))]
-                        ],
-                )]
             ])
 
-            dict_hexa_col = Column([
-                [Frame('Bloom Filter 1: Hexadecimal',
+            dict_bin_col_2 = Column([
+                [Frame('Bloom Filter 2: Binary',
                         [
-                        [sg.Text(dict1_hexa, size=(64,32))]
+                        [sg.Text(dict2_bits, size=(32,15))]
                         ],
                 )],
-                [Frame('Bloom Filter 2: Hexadecimal',
-                        [
-                        [sg.Text(dict2_hexa, size=(64,32))]
-                        ],
-                )]
             ])
+            
 
             curr_ok_col = [Button('Ok', enable_events= True)] 
 
-            filter_visual_layout = [filter_visual_title_col,[dict_bin_col ,dict_hexa_col], curr_ok_col]
+            filter_visual_layout = [filter_visual_title_col,[dict_bin_col_1,dict_bin_col_2], curr_ok_col]
             
             filter_visual_window = Window('Full filter visual', filter_visual_layout)
 
@@ -247,5 +247,3 @@ while True:
 
 
 main_window.close()
-
-c = str(bloomf_1.get_bit_array().unpack(zero=b'0', one=b'1')).replace('b',"").replace("'","")

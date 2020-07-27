@@ -13,22 +13,18 @@ class BloomFilter(object):
     Class for Bloom filter, using murmur3 hash function 
     '''
   
-    def __init__(self, items_count,fp_prob): 
+    def __init__(self, size,hash_times): 
         ''' 
-        items_count : int 
-            Number of items expected to be stored in bloom filter 
-        fp_prob : float 
-            False Positive probability in decimal 
+        hash_times : int 
+            Number of hashes in bloom filter 
+        size : int 
+            Size of bitarray 
         '''
-        # False posible probability in decimal 
-        self.fp_prob = fp_prob 
   
-        # Size of bit array to use 
-        self.size = self.get_size(items_count,fp_prob) 
+        self.size = size
   
-        # number of hash functions to use 
-        self.hash_count = self.get_hash_count(self.size,items_count) 
-  
+        self.hash_count = hash_times
+
         # Bit array of given size 
         self.bit_array = bitarray(self.size) 
   
@@ -39,8 +35,11 @@ class BloomFilter(object):
         self.element_count = 0
 
         # maximum items in the filter (from input)
-        self.max_num_of_items = items_count
+        self.max_num_of_items = hash_times
         
+        # holds the values that were entered the filter
+        self.values = list()
+
     def get_marked_bits_count(self):
         return self.bit_array.count("1")
 
@@ -64,18 +63,25 @@ class BloomFilter(object):
             self.bit_array[digest] = True
         # increment element coount
         self.element_count += 1
+
+        (self.values).append(item)
   
-    def check(self, item): 
+    def check_values(self, item): 
         ''' 
-        Check for existence of an item in filter 
+        Check for existence of an item in filter according to self.values
+        '''
+        
+        if item in self.values:
+            return True
+        return False
+
+    def check(self,item):
+        '''     
+        Check for existence of an item in filter according to the bitarray
         '''
         for i in range(self.hash_count): 
             digest = mmh3.hash(item,i) % self.size 
             if self.bit_array[digest] == False: 
-  
-                # if any of bit is False then,its not present 
-                # in filter 
-                # else there is probability that it exist 
                 return False
         return True
 
@@ -109,7 +115,7 @@ class BloomFilter(object):
         p : float 
             False Positive probability in decimal 
         '''
-        m = -(n * math.log(p))/(math.log(2)**2) 
+        m = (abs(-(n * math.log(p))/(math.log(2)**2))) 
         return int(m) 
   
     @classmethod
